@@ -19,11 +19,17 @@ export interface MealPlan {
   notes: string;
 }
 
+export type Goal = "cut" | "maintain" | "bulk";
+
 export interface PlanMetadata {
   calories: number;
   protein_g: number;
   dislikes: string[];
   budget_per_day_usd: number;
+  carbs_g?: number;
+  fat_g?: number;
+  meals_per_day?: number;
+  goal?: Goal;
 }
 
 export interface GenerateResponse {
@@ -43,4 +49,8 @@ export interface GenerateFormValues {
   protein_g: number;
   dislikes: string[];
   budget_per_day_usd: number;
+  carbs_g?: number;
+  fat_g?: number;
+  meals_per_day?: number;
+  goal?: Goal;
 }

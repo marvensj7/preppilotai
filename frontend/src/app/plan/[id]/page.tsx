@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import MealCard from "@/components/MealCard";
-import MacroBadge from "@/components/MacroBadge";
 import ShoppingChecklist from "@/components/ShoppingChecklist";
 import { fetchPlan } from "@/lib/api";
 import type { PlanResponse } from "@/types/meal-plan";
@@ -21,22 +20,29 @@ export default async function PlanPage({ params }: PlanPageProps) {
       notFound();
     }
     return (
-      <main className="relative min-h-screen">
-        <div className="relative z-10 mx-auto max-w-2xl px-4 py-12">
+      <main style={{ minHeight: "100vh", padding: "48px 16px" }}>
+        <div style={{ maxWidth: 600, margin: "0 auto" }}>
           <div
-            className="rounded-2xl px-5 py-4 text-sm"
             role="alert"
             style={{
-              background: "rgba(239,68,68,0.1)",
-              border: "1px solid rgba(239,68,68,0.3)",
-              color: "#fca5a5",
+              background: "#1a0a0a",
+              border: "1px solid #3a1a1a",
+              borderRadius: 8,
+              padding: "16px 20px",
+              fontSize: 13,
+              color: "#cc6666",
             }}
           >
-            <p className="font-semibold">Failed to load meal plan</p>
-            <p className="mt-1 opacity-80">{err instanceof Error ? err.message : "Unknown error"}</p>
+            <p style={{ fontWeight: 700, margin: "0 0 4px" }}>Failed to load plan</p>
+            <p style={{ margin: 0, color: "#885555" }}>
+              {err instanceof Error ? err.message : "Unknown error"}
+            </p>
           </div>
-          <Link href="/" className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors">
-            ← Back to generator
+          <Link
+            href="/"
+            style={{ display: "inline-block", marginTop: 20, fontSize: 13, color: "#888", textDecoration: "none" }}
+          >
+            ← Back
           </Link>
         </div>
       </main>
@@ -45,94 +51,98 @@ export default async function PlanPage({ params }: PlanPageProps) {
 
   const { plan, metadata } = data;
 
-  const totalMacroItems = [
-    { label: "kcal", value: plan.totals.kcal, color: "#fb923c" },
-    { label: "protein", value: plan.totals.protein, unit: "g", color: "#60a5fa" },
-    { label: "carbs", value: plan.totals.carbs, unit: "g", color: "#facc15" },
-    { label: "fat", value: plan.totals.fat, unit: "g", color: "#f472b6" },
-  ];
+  const goalLabel: Record<string, string> = {
+    cut: "CUT",
+    maintain: "MAINTAIN",
+    bulk: "BULK",
+  };
 
   return (
-    <main className="relative min-h-screen overflow-hidden">
-      {/* Glow orbs */}
-      <div aria-hidden="true" className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div
-          className="absolute rounded-full"
-          style={{
-            width: "500px",
-            height: "500px",
-            top: "-100px",
-            right: "-200px",
-            background: "radial-gradient(circle, rgba(6,182,212,0.08) 0%, transparent 70%)",
-          }}
-        />
-        <div
-          className="absolute rounded-full"
-          style={{
-            width: "400px",
-            height: "400px",
-            bottom: "0",
-            left: "-100px",
-            background: "radial-gradient(circle, rgba(34,197,94,0.08) 0%, transparent 70%)",
-          }}
-        />
-      </div>
-
-      <div className="relative z-10 mx-auto max-w-2xl px-4 py-10 sm:py-14">
-        {/* Back link */}
+    <main
+      style={{
+        minHeight: "100vh",
+        padding: "48px 16px 80px",
+      }}
+    >
+      <div style={{ maxWidth: 600, margin: "0 auto" }}>
+        {/* Back */}
         <Link
           href="/"
-          className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-300"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: "0.08em",
+            color: "#555",
+            textDecoration: "none",
+            marginBottom: 32,
+            textTransform: "uppercase",
+          }}
         >
-          <span
-            className="flex h-7 w-7 items-center justify-center rounded-full"
-            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-          >
-            ←
-          </span>
-          Generate a new plan
+          ← GENERATOR
         </Link>
 
-        {/* Page title */}
-        <div className="mb-8">
+        {/* Title */}
+        <div style={{ marginBottom: 32 }}>
           <h1
-            className="text-4xl font-black tracking-tight"
             style={{
-              background: "linear-gradient(135deg, #22c55e 0%, #06b6d4 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
+              fontSize: 28,
+              fontWeight: 800,
+              letterSpacing: "-0.01em",
+              color: "#f5f5f5",
+              margin: "0 0 4px",
+              textTransform: "uppercase",
             }}
           >
             Your Meal Plan
           </h1>
-          <p className="mt-1 text-xs text-slate-600 font-mono">ID: {params.id}</p>
+          <p style={{ fontSize: 11, color: "#444", margin: 0, fontFamily: "monospace" }}>
+            {params.id}
+          </p>
         </div>
 
         {/* Summary card */}
-        <section
-          className="mb-8 rounded-2xl p-5 sm:p-6"
-          style={{
-            background: "linear-gradient(135deg, rgba(34,197,94,0.12) 0%, rgba(6,182,212,0.08) 100%)",
-            border: "1px solid rgba(34,197,94,0.2)",
-          }}
-        >
-          {/* Preferences row */}
-          <div className="mb-5 flex flex-wrap gap-2">
+        <div className="card" style={{ padding: "16px 20px", marginBottom: 24 }}>
+          {/* Targets row */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+            {metadata.goal && (
+              <span
+                style={{
+                  background: "#f5f5f5",
+                  color: "#0a0a0a",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: "0.08em",
+                  borderRadius: 4,
+                  padding: "4px 8px",
+                }}
+              >
+                {goalLabel[metadata.goal] ?? metadata.goal.toUpperCase()}
+              </span>
+            )}
             {[
-              { icon: "🔥", label: `${metadata.calories} kcal goal` },
-              { icon: "💪", label: `${metadata.protein_g}g protein` },
-              { icon: "💰", label: `$${metadata.budget_per_day_usd}/day` },
-              ...(metadata.dislikes.length > 0
-                ? [{ icon: "🚫", label: `No ${metadata.dislikes.join(", ")}` }]
-                : []),
-            ].map(({ icon, label }) => (
+              `${metadata.calories} KCAL`,
+              `${metadata.protein_g}G PROTEIN`,
+              ...(metadata.carbs_g != null ? [`${metadata.carbs_g}G CARBS`] : []),
+              ...(metadata.fat_g != null ? [`${metadata.fat_g}G FAT`] : []),
+              `$${metadata.budget_per_day_usd}/DAY`,
+              ...(metadata.dislikes?.length ? [`NO ${metadata.dislikes.join(", ").toUpperCase()}`] : []),
+            ].map((label) => (
               <span
                 key={label}
-                className="flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium text-slate-300"
-                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)" }}
+                style={{
+                  background: "#1e1e1e",
+                  border: "1px solid #2a2a2a",
+                  color: "#888",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  letterSpacing: "0.06em",
+                  borderRadius: 4,
+                  padding: "4px 8px",
+                }}
               >
-                <span>{icon}</span>
                 {label}
               </span>
             ))}
@@ -140,42 +150,42 @@ export default async function PlanPage({ params }: PlanPageProps) {
 
           {/* Day totals */}
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-              Day Totals
-            </p>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {totalMacroItems.map(({ label, value, unit, color }) => (
+            <p className="label" style={{ marginBottom: 10 }}>Day Totals</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
+              {[
+                { label: "KCAL",    value: plan.totals.kcal,    unit: "" },
+                { label: "PROTEIN", value: plan.totals.protein, unit: "G" },
+                { label: "CARBS",   value: plan.totals.carbs,   unit: "G" },
+                { label: "FAT",     value: plan.totals.fat,     unit: "G" },
+              ].map(({ label, value, unit }) => (
                 <div
                   key={label}
-                  className="rounded-xl px-3 py-2 text-center"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
+                  style={{
+                    background: "#0a0a0a",
+                    border: "1px solid #1e1e1e",
+                    borderRadius: 6,
+                    padding: "10px 8px",
+                    textAlign: "center",
+                  }}
                 >
-                  <p className="text-lg font-bold" style={{ color }}>
-                    {value}<span className="text-sm">{unit ?? ""}</span>
+                  <p style={{ fontSize: 20, fontWeight: 700, color: "#f5f5f5", margin: 0, lineHeight: 1 }}>
+                    {value}<span style={{ fontSize: 13 }}>{unit}</span>
                   </p>
-                  <p className="text-xs text-slate-500">{label}</p>
+                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: "#555", margin: "4px 0 0", textTransform: "uppercase" }}>
+                    {label}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
-        </section>
+        </div>
 
         {/* Meals */}
-        <section className="mb-8">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-white">
-            <span>Meals</span>
-            <span
-              className="rounded-full px-2.5 py-0.5 text-sm font-semibold"
-              style={{
-                background: "linear-gradient(135deg, rgba(34,197,94,0.2), rgba(6,182,212,0.2))",
-                border: "1px solid rgba(34,197,94,0.3)",
-                color: "#4ade80",
-              }}
-            >
-              {plan.meals.length}
-            </span>
-          </h2>
-          <div className="space-y-4">
+        <section style={{ marginBottom: 24 }}>
+          <p className="label" style={{ marginBottom: 12 }}>
+            Meals — {plan.meals.length}
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {plan.meals.map((meal, idx) => (
               <MealCard key={`${meal.name}-${idx}`} meal={meal} index={idx} />
             ))}
@@ -183,37 +193,33 @@ export default async function PlanPage({ params }: PlanPageProps) {
         </section>
 
         {/* Shopping list */}
-        <section
-          className="mb-8 rounded-2xl p-5 sm:p-6"
-          style={{
-            background: "rgba(15,12,41,0.6)",
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(16px)",
-            border: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-white">
-            <span>🛒</span>
-            <span>Shopping List</span>
-          </h2>
+        <section className="card" style={{ padding: "16px 20px", marginBottom: 16 }}>
+          <p className="label" style={{ marginBottom: 16 }}>Shopping List</p>
           <ShoppingChecklist items={plan.shopping_list} />
         </section>
 
         {/* Notes */}
         {plan.notes && (
           <section
-            className="rounded-2xl p-5"
             style={{
-              background: "linear-gradient(135deg, rgba(34,197,94,0.07) 0%, rgba(6,182,212,0.05) 100%)",
-              border: "1px solid rgba(34,197,94,0.15)",
+              background: "#1a1a1a",
+              border: "1px solid #1e1e1e",
+              borderRadius: 8,
+              padding: "16px 20px",
+              marginBottom: 32,
             }}
           >
-            <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500">
-              <span>💡</span> Nutritionist Notes
-            </h2>
-            <p className="text-sm leading-relaxed text-slate-400">{plan.notes}</p>
+            <p className="label" style={{ marginBottom: 8 }}>Performance Notes</p>
+            <p style={{ fontSize: 13, color: "#888", lineHeight: 1.7, margin: 0 }}>{plan.notes}</p>
           </section>
         )}
+
+        {/* CTA */}
+        <Link href="/" style={{ textDecoration: "none" }}>
+          <button className="btn-primary" type="button">
+            GENERATE ANOTHER PLAN →
+          </button>
+        </Link>
       </div>
     </main>
   );

@@ -1,9 +1,16 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "PrepPilotAI — AI Meal Planner",
-  description: "Generate personalised meal plans powered by Claude AI",
+  title: "PrepPilotAI — Precision Nutrition",
+  description: "Precision nutrition built for performance. AI-generated meal plans for serious athletes.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -15,16 +22,12 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0f0c29",
+  themeColor: "#0a0a0a",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.className}>
       <body className="min-h-screen">{children}</body>
     </html>
   );

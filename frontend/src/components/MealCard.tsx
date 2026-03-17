@@ -6,50 +6,57 @@ interface MealCardProps {
   index: number;
 }
 
-const MEAL_ICONS = ["🌅", "🥗", "🍎", "🍽️", "🌙"];
-
 export default function MealCard({ meal, index }: MealCardProps) {
-  const icon = MEAL_ICONS[index % MEAL_ICONS.length];
-
   return (
-    <article className="meal-card overflow-hidden">
-      {/* Card header */}
+    <article className="card" style={{ overflow: "hidden" }}>
+      {/* Header */}
       <div
-        className="flex items-center gap-3 px-5 py-4"
         style={{
-          background: "linear-gradient(135deg, rgba(34,197,94,0.12) 0%, rgba(6,182,212,0.08) 100%)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          padding: "14px 20px",
+          borderBottom: "1px solid #1e1e1e",
+          display: "flex",
+          alignItems: "baseline",
+          gap: 12,
         }}
       >
         <span
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg"
-          style={{ background: "rgba(255,255,255,0.08)" }}
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: "0.08em",
+            color: "#444",
+            textTransform: "uppercase",
+            whiteSpace: "nowrap",
+          }}
         >
-          {icon}
+          {String(index + 1).padStart(2, "0")}
         </span>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
-            Meal {index + 1}
-          </p>
-          <h3 className="font-bold text-white leading-snug">{meal.name}</h3>
-        </div>
+        <h3
+          style={{
+            fontSize: 16,
+            fontWeight: 700,
+            color: "#f5f5f5",
+            margin: 0,
+            lineHeight: 1.3,
+          }}
+        >
+          {meal.name}
+        </h3>
       </div>
 
-      {/* Card body */}
-      <div className="p-5 space-y-5">
+      {/* Body */}
+      <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
         <MacroBadge macros={meal.macros} />
 
         <div>
-          <h4 className="mb-2.5 text-xs font-semibold uppercase tracking-widest text-slate-500">
-            Ingredients
-          </h4>
-          <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+          <p className="label" style={{ marginBottom: 8 }}>Ingredients</p>
+          <ul style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 16px", margin: 0, padding: 0, listStyle: "none" }}>
             {meal.ingredients.map((ingredient) => (
-              <li key={ingredient} className="flex items-start gap-2 text-sm text-slate-300">
-                <span
-                  className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
-                  style={{ background: "linear-gradient(135deg, #22c55e, #06b6d4)" }}
-                />
+              <li
+                key={ingredient}
+                style={{ fontSize: 13, color: "#888", display: "flex", alignItems: "flex-start", gap: 6 }}
+              >
+                <span style={{ color: "#333", marginTop: 4, flexShrink: 0 }}>—</span>
                 {ingredient}
               </li>
             ))}
@@ -57,10 +64,8 @@ export default function MealCard({ meal, index }: MealCardProps) {
         </div>
 
         <div>
-          <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-widest text-slate-500">
-            Preparation
-          </h4>
-          <p className="text-sm leading-relaxed text-slate-400">{meal.prep}</p>
+          <p className="label" style={{ marginBottom: 6 }}>Preparation</p>
+          <p style={{ fontSize: 13, color: "#888", lineHeight: 1.6, margin: 0 }}>{meal.prep}</p>
         </div>
       </div>
     </article>

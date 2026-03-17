@@ -21,41 +21,45 @@ export default function ShoppingChecklist({ items }: ShoppingChecklistProps) {
     });
   }
 
-  function clearAll() {
-    setChecked(new Set());
-  }
-
   const checkedCount = checked.size;
 
   return (
-    <div className="space-y-3">
-      {/* Progress bar */}
-      <div className="flex items-center justify-between text-xs text-slate-500">
-        <span>{checkedCount} of {items.length} items collected</span>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* Progress */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span className="label">{checkedCount}/{items.length} collected</span>
         {checkedCount > 0 && (
           <button
-            onClick={clearAll}
-            className="text-slate-600 transition-colors hover:text-slate-400"
+            onClick={() => setChecked(new Set())}
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: 11,
+              color: "#555",
+              cursor: "pointer",
+              letterSpacing: "0.04em",
+            }}
           >
-            Clear all
+            CLEAR
           </button>
         )}
       </div>
-      <div
-        className="h-1.5 w-full rounded-full overflow-hidden"
-        style={{ background: "rgba(255,255,255,0.08)" }}
-      >
+
+      {/* Progress bar */}
+      <div style={{ height: 2, background: "#1e1e1e", borderRadius: 1 }}>
         <div
-          className="h-full rounded-full transition-all duration-500"
           style={{
+            height: "100%",
+            background: "#c0c0c0",
+            borderRadius: 1,
             width: `${(checkedCount / items.length) * 100}%`,
-            background: "linear-gradient(90deg, #22c55e, #06b6d4)",
+            transition: "width 0.3s ease",
           }}
         />
       </div>
 
-      {/* Items grid */}
-      <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {/* Items */}
+      <ul style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, margin: 0, padding: 0, listStyle: "none" }}>
         {items.map((item) => {
           const isChecked = checked.has(item);
           return (
@@ -63,38 +67,49 @@ export default function ShoppingChecklist({ items }: ShoppingChecklistProps) {
               <button
                 type="button"
                 onClick={() => toggle(item)}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200"
                 style={{
-                  background: isChecked
-                    ? "rgba(34,197,94,0.08)"
-                    : "rgba(255,255,255,0.03)",
-                  border: isChecked
-                    ? "1px solid rgba(34,197,94,0.25)"
-                    : "1px solid rgba(255,255,255,0.06)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  width: "100%",
+                  background: "none",
+                  border: "none",
+                  padding: "6px 4px",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  borderRadius: 4,
+                  transition: "background 0.1s",
                 }}
               >
                 {/* Checkbox */}
                 <span
-                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md transition-all duration-200"
                   style={{
-                    background: isChecked
-                      ? "linear-gradient(135deg, #22c55e, #06b6d4)"
-                      : "rgba(255,255,255,0.06)",
-                    border: isChecked ? "none" : "1px solid rgba(255,255,255,0.15)",
+                    flexShrink: 0,
+                    width: 16,
+                    height: 16,
+                    borderRadius: 3,
+                    border: `1px solid ${isChecked ? "#c0c0c0" : "#333"}`,
+                    background: isChecked ? "#c0c0c0" : "transparent",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "all 0.15s ease",
                   }}
                 >
                   {isChecked && (
-                    <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   )}
                 </span>
 
                 <span
-                  className="text-sm transition-all duration-200"
                   style={{
-                    color: isChecked ? "rgba(148,163,184,0.5)" : "#cbd5e1",
+                    fontSize: 13,
+                    color: isChecked ? "#444" : "#888",
                     textDecoration: isChecked ? "line-through" : "none",
+                    transition: "all 0.15s ease",
+                    lineHeight: 1.4,
                   }}
                 >
                   {item}

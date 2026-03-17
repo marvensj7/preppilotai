@@ -34,30 +34,39 @@ export default function TagInput({
   }
 
   return (
-    <div
-      className="flex flex-wrap items-center gap-2 rounded-xl px-3 py-2.5 transition-all focus-within:ring-2"
-      style={{
-        background: "rgba(255,255,255,0.05)",
-        border: "1px solid rgba(255,255,255,0.1)",
-      }}
-    >
+    <div className="tag-container">
       {tags.map((tag) => (
         <span
           key={tag}
-          className="flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-medium"
           style={{
-            background: "linear-gradient(135deg, rgba(34,197,94,0.2), rgba(6,182,212,0.2))",
-            border: "1px solid rgba(34,197,94,0.3)",
-            color: "#4ade80",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            background: "#1e1e1e",
+            border: "1px solid #333",
+            borderRadius: 4,
+            padding: "3px 8px",
+            fontSize: 12,
+            fontWeight: 600,
+            color: "#c0c0c0",
+            letterSpacing: "0.03em",
           }}
         >
           {tag}
           <button
             type="button"
             onClick={() => removeTag(tag)}
-            className="ml-0.5 rounded-full transition-colors hover:text-white focus:outline-none"
             aria-label={`Remove ${tag}`}
-            style={{ color: "rgba(74,222,128,0.7)" }}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#555",
+              cursor: "pointer",
+              padding: 0,
+              lineHeight: 1,
+              fontSize: 14,
+              marginLeft: 2,
+            }}
           >
             ×
           </button>
@@ -69,7 +78,16 @@ export default function TagInput({
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={tags.length === 0 ? placeholder : ""}
-        className="min-w-[120px] flex-1 bg-transparent text-sm text-slate-200 outline-none placeholder:text-slate-600"
+        style={{
+          flex: 1,
+          minWidth: 120,
+          background: "transparent",
+          border: "none",
+          outline: "none",
+          fontSize: 13,
+          color: "#f5f5f5",
+          padding: 0,
+        }}
       />
     </div>
   );

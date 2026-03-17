@@ -27,7 +27,6 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# Will be set per-invocation so every log record carries it.
 _request_id: str = "bootstrap"
 
 
@@ -45,7 +44,7 @@ for _h in logger.handlers:
 
 
 # ---------------------------------------------------------------------------
-# AWS clients (initialised outside handler for Lambda container reuse)
+# AWS clients
 # ---------------------------------------------------------------------------
 
 _dynamodb = boto3.resource("dynamodb", region_name=os.environ.get("AWS_REGION", "us-east-1"))
@@ -58,6 +57,8 @@ ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 CLAUDE_MODEL = "claude-sonnet-4-6"
 
 _table = _dynamodb.Table(TABLE_NAME)
+
+VALID_GOALS = {"cut", "maintain", "bulk"}
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -129,6 +130,28 @@ def _validate_input(body: dict[str, Any]) -> str | None:
     if not isinstance(budget, (int, float)) or not (1 <= budget <= 100):
         return "budget_per_day_usd must be a number between 1 and 100"
 
+    # Optional advanced fields
+    carbs_g = body.get("carbs_g")
+    fat_g = body.get("fat_g")
+    meals_per_day = body.get("meals_per_day")
+    goal = body.get("goal")
+
+    if carbs_g is not None:
+        if not isinstance(carbs_g, (int, float)) or not (0 <= carbs_g <= 600):
+            return "carbs_g must be a number between 0 and 600"
+
+    if fat_g is not None:
+        if not isinstance(fat_g, (int, float)) or not (0 <= fat_g <= 200):
+            return "fat_g must be a number between 0 and 200"
+
+    if meals_per_day is not None:
+        if not isinstance(meals_per_day, int) or not (2 <= meals_per_day <= 6):
+            return "meals_per_day must be an integer between 2 and 6"
+
+    if goal is not None:
+        if goal not in VALID_GOALS:
+            return f"goal must be one of: {', '.join(sorted(VALID_GOALS))}"
+
     return None
 
 
@@ -137,6 +160,10 @@ def _build_prompt(
     protein_g: float,
     dislikes: list[str],
     budget_per_day_usd: float,
+    carbs_g: float | None = None,
+    fat_g: float | None = None,
+    meals_per_day: int = 3,
+    goal: str | None = None,
 ) -> str:
     """Construct the Claude prompt for meal plan generation."""
     dislike_text = (
@@ -144,13 +171,31 @@ def _build_prompt(
         if dislikes
         else "No specific food restrictions."
     )
-    return f"""You are a professional nutritionist and meal planner.
 
-Create a one-day meal plan for a person with the following requirements:
-- Daily calorie target: {calories} kcal
-- Daily protein target: {protein_g} g
+    goal_line = ""
+    if goal:
+        goal_descriptions = {
+            "cut": "CUT (caloric deficit phase — prioritise lean protein, minimise fat, low carbs)",
+            "maintain": "MAINTAIN (maintenance phase — balanced macros for performance)",
+            "bulk": "BULK (caloric surplus phase — support muscle growth with higher carbs)",
+        }
+        goal_line = f"\n- Athletic goal: {goal_descriptions.get(goal, goal.upper())}"
+
+    macro_lines = f"- Daily calorie target: {calories} kcal\n- Daily protein target: {protein_g}g"
+    if carbs_g is not None:
+        macro_lines += f"\n- Daily carbohydrate target: {carbs_g}g (hit this precisely)"
+    if fat_g is not None:
+        macro_lines += f"\n- Daily fat target: {fat_g}g (hit this precisely)"
+
+    return f"""You are a precision sports nutritionist creating meal plans for serious athletes.
+
+Create a one-day meal plan with the following exact requirements:
+{macro_lines}
 - Daily food budget: ${budget_per_day_usd:.2f} USD
-- {dislike_text}
+- {dislike_text}{goal_line}
+- Number of meals: provide EXACTLY {meals_per_day} meals, no more, no less
+
+{'CRITICAL: The macro targets (protein, carbs, fat) are precise athletic requirements. Each meal must contribute appropriately. Hitting these targets is more important than exact round numbers.' if carbs_g is not None or fat_g is not None else ''}
 
 Return ONLY valid JSON (no markdown, no explanation) in exactly this shape:
 {{
@@ -164,10 +209,10 @@ Return ONLY valid JSON (no markdown, no explanation) in exactly this shape:
   ],
   "totals": {{"kcal": 0, "protein": 0, "carbs": 0, "fat": 0}},
   "shopping_list": ["item 1", "item 2"],
-  "notes": "Any helpful nutritional tips or substitution ideas."
+  "notes": "Performance nutrition notes, timing recommendations, or substitution ideas."
 }}
 
-Provide 3-5 meals for the day. All numeric macro values must be integers."""
+Provide exactly {meals_per_day} meals. All numeric macro values must be integers."""
 
 
 def _call_claude(prompt: str, api_key: str) -> dict[str, Any]:
@@ -213,7 +258,6 @@ def _call_claude(prompt: str, api_key: str) -> dict[str, Any]:
         raise RuntimeError("No text content in Anthropic response")
 
     raw_text: str = text_block["text"].strip()
-    # Strip optional markdown code fences Claude sometimes adds
     if raw_text.startswith("```"):
         raw_text = raw_text.split("\n", 1)[-1]
         if raw_text.endswith("```"):
@@ -272,29 +316,47 @@ def _handle_generate(event: dict[str, Any]) -> dict[str, Any]:
     protein_g: float = body["protein_g"]
     dislikes: list[str] = body.get("dislikes", [])
     budget: float = body["budget_per_day_usd"]
+    carbs_g: float | None = body.get("carbs_g")
+    fat_g: float | None = body.get("fat_g")
+    meals_per_day: int = int(body.get("meals_per_day", 3))
+    goal: str | None = body.get("goal")
 
     logger.info(
-        "Generating plan: calories=%.0f protein=%.0f dislikes=%s budget=%.2f",
+        "Generating plan: calories=%.0f protein=%.0f carbs=%s fat=%s meals=%d goal=%s budget=%.2f",
         calories,
         protein_g,
-        dislikes,
+        carbs_g,
+        fat_g,
+        meals_per_day,
+        goal,
         budget,
     )
 
     try:
         api_key = _get_anthropic_key()
-        prompt = _build_prompt(calories, protein_g, dislikes, budget)
+        prompt = _build_prompt(
+            calories, protein_g, dislikes, budget,
+            carbs_g=carbs_g, fat_g=fat_g,
+            meals_per_day=meals_per_day, goal=goal,
+        )
         plan = _call_claude(prompt, api_key)
     except RuntimeError as exc:
         return _error(502, str(exc))
 
     plan_id = str(uuid.uuid4())
-    metadata = {
+    metadata: dict[str, Any] = {
         "calories": calories,
         "protein_g": protein_g,
         "dislikes": dislikes,
         "budget_per_day_usd": budget,
+        "meals_per_day": meals_per_day,
     }
+    if carbs_g is not None:
+        metadata["carbs_g"] = carbs_g
+    if fat_g is not None:
+        metadata["fat_g"] = fat_g
+    if goal is not None:
+        metadata["goal"] = goal
 
     try:
         _save_plan(plan_id, plan, metadata)
@@ -317,7 +379,11 @@ def _handle_get_plan(plan_id: str) -> dict[str, Any]:
     if item is None:
         return _error(404, f"Plan '{plan_id}' not found")
 
-    return _response(200, {"plan_id": plan_id, "plan": item["plan"], "metadata": item.get("metadata", {})})
+    return _response(200, {
+        "plan_id": plan_id,
+        "plan": item["plan"],
+        "metadata": item.get("metadata", {}),
+    })
 
 
 # ---------------------------------------------------------------------------
@@ -337,7 +403,6 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     method: str = event.get("requestContext", {}).get("http", {}).get("method", "")
     raw_path: str = event.get("rawPath", "")
 
-    # Strip the stage prefix (e.g. /prod/generate → /generate)
     stage: str = event.get("requestContext", {}).get("stage", "")
     if stage and raw_path.startswith(f"/{stage}"):
         path = raw_path[len(f"/{stage}"):]
@@ -346,7 +411,6 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
     logger.info("Received %s %s (rawPath=%s)", method, path, raw_path)
 
-    # CORS preflight
     if method == "OPTIONS":
         return _response(200, {})
 
