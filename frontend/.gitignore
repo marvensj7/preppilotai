@@ -1,0 +1,17 @@
+# Next.js
+.next/
+out/
+node_modules/
+
+# Environment — NEVER commit real keys
+.env.local
+
+# PWA service worker (generated at build)
+public/sw.js
+public/workbox-*.js
+public/worker-*.js
+public/fallback-*.js
+
+# Misc
+.DS_Store
+*.tsbuildinfo
