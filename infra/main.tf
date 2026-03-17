@@ -46,7 +46,7 @@ resource "aws_dynamodb_table" "plans" {
 # ---------------------------------------------------------------------------
 
 data "aws_ssm_parameter" "anthropic_key" {
-  name            = "/${var.project}/anthropic_api_key"
+  name            = "${var.project}-anthropic-api-key"
   with_decryption = false # Only used to get the ARN for IAM; Lambda decrypts at runtime
 }
 
@@ -154,7 +154,7 @@ resource "aws_lambda_function" "api" {
   environment {
     variables = {
       DYNAMODB_TABLE  = aws_dynamodb_table.plans.name
-      SSM_PARAM_PATH  = "/${var.project}/anthropic_api_key"
+      SSM_PARAM_PATH  = "${var.project}-anthropic-api-key"
     }
   }
 

@@ -15,3 +15,5 @@ public/fallback-*.js
 # Misc
 .DS_Store
 *.tsbuildinfo
+
+.vercel
