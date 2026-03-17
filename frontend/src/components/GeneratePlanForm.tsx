@@ -44,7 +44,7 @@ export default function GeneratePlanForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-7" noValidate>
+    <form onSubmit={handleSubmit} className="space-y-8" noValidate>
       <SliderField
         id="calories"
         label="Daily Calories"
@@ -78,23 +78,31 @@ export default function GeneratePlanForm() {
         onChange={(v) => setField("budget_per_day_usd", v)}
       />
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">
+      {/* Divider */}
+      <div className="h-px w-full" style={{ background: "rgba(255,255,255,0.06)" }} />
+
+      <div className="space-y-2.5">
+        <label className="text-sm font-medium text-slate-300">
           Foods to Avoid
-          <span className="ml-1.5 text-xs font-normal text-gray-400">(optional)</span>
+          <span className="ml-2 text-xs font-normal text-slate-600">optional</span>
         </label>
         <TagInput
           tags={values.dislikes}
           onChange={(tags) => setField("dislikes", tags)}
           placeholder="e.g. gluten, shellfish, mushrooms…"
         />
-        <p className="text-xs text-gray-400">Press Enter or comma to add each item.</p>
+        <p className="text-xs text-slate-600">Press Enter or comma to add each item.</p>
       </div>
 
       {error && (
         <div
           role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          className="rounded-xl px-4 py-3 text-sm"
+          style={{
+            background: "rgba(239,68,68,0.1)",
+            border: "1px solid rgba(239,68,68,0.3)",
+            color: "#fca5a5",
+          }}
         >
           {error}
         </div>
@@ -102,9 +110,12 @@ export default function GeneratePlanForm() {
 
       <button
         type="submit"
-        className="w-full rounded-xl bg-brand-600 px-6 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-[0.98]"
+        className="gradient-btn relative w-full rounded-xl px-6 py-4 text-base font-bold text-white"
       >
-        Generate My Meal Plan
+        <span className="relative z-10 flex items-center justify-center gap-2">
+          <span>Generate My Meal Plan</span>
+          <span>✨</span>
+        </span>
       </button>
     </form>
   );

@@ -34,18 +34,30 @@ export default function TagInput({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 focus-within:ring-2 focus-within:ring-brand-500 focus-within:border-transparent transition">
+    <div
+      className="flex flex-wrap items-center gap-2 rounded-xl px-3 py-2.5 transition-all focus-within:ring-2"
+      style={{
+        background: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.1)",
+      }}
+    >
       {tags.map((tag) => (
         <span
           key={tag}
-          className="flex items-center gap-1 rounded-full bg-brand-100 px-2.5 py-0.5 text-sm font-medium text-brand-700"
+          className="flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-medium"
+          style={{
+            background: "linear-gradient(135deg, rgba(34,197,94,0.2), rgba(6,182,212,0.2))",
+            border: "1px solid rgba(34,197,94,0.3)",
+            color: "#4ade80",
+          }}
         >
           {tag}
           <button
             type="button"
             onClick={() => removeTag(tag)}
-            className="ml-0.5 rounded-full text-brand-600 hover:text-brand-800 focus:outline-none"
+            className="ml-0.5 rounded-full transition-colors hover:text-white focus:outline-none"
             aria-label={`Remove ${tag}`}
+            style={{ color: "rgba(74,222,128,0.7)" }}
           >
             ×
           </button>
@@ -57,7 +69,7 @@ export default function TagInput({
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={tags.length === 0 ? placeholder : ""}
-        className="min-w-[120px] flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400"
+        className="min-w-[120px] flex-1 bg-transparent text-sm text-slate-200 outline-none placeholder:text-slate-600"
       />
     </div>
   );
