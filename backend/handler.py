@@ -14,6 +14,7 @@ import os
 import urllib.error
 import urllib.request
 import uuid
+from decimal import Decimal
 from typing import Any
 
 import boto3
@@ -51,7 +52,7 @@ _dynamodb = boto3.resource("dynamodb", region_name=os.environ.get("AWS_REGION", 
 _ssm = boto3.client("ssm", region_name=os.environ.get("AWS_REGION", "us-east-1"))
 
 TABLE_NAME = os.environ.get("DYNAMODB_TABLE", "preppilotai-plans")
-SSM_KEY_PATH = os.environ.get("SSM_PARAM_PATH", "/preppilotai/anthropic_api_key")
+SSM_KEY_PATH = os.environ.get("SSM_PARAM_PATH", "preppilotai-anthropic-api-key")
 ANTHROPIC_VERSION = "2023-06-01"
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 CLAUDE_MODEL = "claude-sonnet-4-6"
@@ -73,12 +74,19 @@ def _cors_headers() -> dict[str, str]:
     }
 
 
+def _decimal_default(obj: Any) -> Any:
+    """JSON serializer for Decimal values returned by DynamoDB."""
+    if isinstance(obj, Decimal):
+        return int(obj) if obj % 1 == 0 else float(obj)
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+
 def _response(status: int, body: Any) -> dict[str, Any]:
     """Build an API Gateway proxy-compatible response dict."""
     return {
         "statusCode": status,
         "headers": _cors_headers(),
-        "body": json.dumps(body),
+        "body": json.dumps(body, default=_decimal_default),
     }
 
 
@@ -327,9 +335,16 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     _request_id = getattr(context, "aws_request_id", "local")
 
     method: str = event.get("requestContext", {}).get("http", {}).get("method", "")
-    path: str = event.get("rawPath", "")
+    raw_path: str = event.get("rawPath", "")
 
-    logger.info("Received %s %s", method, path)
+    # Strip the stage prefix (e.g. /prod/generate → /generate)
+    stage: str = event.get("requestContext", {}).get("stage", "")
+    if stage and raw_path.startswith(f"/{stage}"):
+        path = raw_path[len(f"/{stage}"):]
+    else:
+        path = raw_path
+
+    logger.info("Received %s %s (rawPath=%s)", method, path, raw_path)
 
     # CORS preflight
     if method == "OPTIONS":
